@@ -131,5 +131,5 @@ Completed the implementation of tideman.c in such a way that it simulates a Tide
   * The function sorts the `pairs` array in decreasing order of strength of victory, where strength of victory is defined to be the number of voters who prefer the preferred candidate. If multiple pairs have the same strength of victory, we assume that the order does not matter.
 * Completed the `lock_pairs` function.
   * The function creates the `locked` graph, adding all edges in decreasing order of victory strength so long as the edge would not create a cycle.
-* Completed the print_winner function.
+* Completed the 1print_winner1 function.
   * The function prints out the name of the candidate who is the source of the graph. We assume there will not be more than one source.
