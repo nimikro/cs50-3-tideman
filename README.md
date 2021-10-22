@@ -2,8 +2,10 @@
 This is a command line application developed in C# that will run a Tideman election. This is an exercise for Harvard's CS50 online course.
 
 # Table of contents
-
-
+1. [Tideman](#Tideman)
+2. [Background](#Background)
+3. [Understanding](#Understanding)
+4. [Specification](#Specification)
 
 # Tideman
 This program runs a Tideman election, per the below.
@@ -38,19 +40,19 @@ You already know about plurality elections, which follow a very simple algorithm
 
 But the plurality vote does have some disadvantages. What happens, for instance, in an election with three candidates, and the ballots below are cast?
 
-Five ballots, tie betweeen Alice and Bob
+![Five ballots, tie betweeen Alice and Bob](https://github.com/Nimikro/cs50-3-tideman/blob/main/images/fptp_ballot_1.png)
 
 A plurality vote would here declare a tie between Alice and Bob, since each has two votes. But is that the right outcome?
 
 There’s another kind of voting system known as a ranked-choice voting system. In a ranked-choice system, voters can vote for more than one candidate. Instead of just voting for their top choice, they can rank the candidates in order of preference. The resulting ballots might therefore look like the below.
 
-Three ballots, with ranked preferences
+![Three ballots, with ranked preferences](https://github.com/Nimikro/cs50-3-tideman/blob/main/images/ranked_ballot_1.png)
 
 Here, each voter, in addition to specifying their first preference candidate, has also indicated their second and third choices. And now, what was previously a tied election could now have a winner. The race was originally tied between Alice and Bob. But the voter who chose Charlie preferred Alice over Bob, so Alice could here be declared the winner.
 
 Ranked choice voting can also solve yet another potential drawback of plurality voting. Take a look at the following ballots.
 
-Nine ballots, with ranked preferences
+![Nine ballots, with ranked preferences](https://github.com/Nimikro/cs50-3-tideman/blob/main/images/condorcet_1.png)
 
 Who should win this election? In a plurality vote where each voter chooses their first preference only, Charlie wins this election with four votes compared to only three for Bob and two for Alice. (Note that, if you’re familiar with the instant runoff voting system, Charlie wins here under that system as well). Alice, however, might reasonably make the argument that she should be the winner of the election instead of Charlie: after all, of the nine voters, a majority (five of them) preferred Alice over Charlie, so most people would be happier with Alice as the winner instead of Charlie.
 
@@ -60,7 +62,7 @@ The Tideman voting method (also known as “ranked pairs”) is a ranked-choice 
 
 Generally speaking, the Tideman method works by constructing a “graph” of candidates, where an arrow (i.e. edge) from candidate A to candidate B indicates that candidate A wins against candidate B in a head-to-head matchup. The graph for the above election, then, would look like the below.
 
-Nine ballots, with ranked preferences
+![Nine ballots, with ranked preferences](https://github.com/Nimikro/cs50-3-tideman/blob/main/images/condorcet_graph_1.png)
 
 The arrow from Alice to Bob means that more voters prefer Alice to Bob (5 prefer Alice, 4 prefer Bob). Likewise, the other arrows mean that more voters prefer Alice to Charlie, and more voters prefer Charlie to Bob.
 
@@ -68,7 +70,7 @@ Looking at this graph, the Tideman method says the winner of the election should
 
 It’s possible, however, that when the arrows are drawn, there is no Condorcet winner. Consider the below ballots.
 
-Nine ballots, with ranked preferences
+![Nine ballots, with ranked preferences](https://github.com/Nimikro/cs50-3-tideman/blob/main/images/no_condorcet_1.png)
 
 Between Alice and Bob, Alice is preferred over Bob by a 7-2 margin. Between Bob and Charlie, Bob is preferred over Charlie by a 5-4 margin. But between Charlie and Alice, Charlie is preferred over Alice by a 6-3 margin. If we draw out the graph, there is no source! We have a cycle of candidates, where Alice beats Bob who beats Charlie who beats Alice (much like a game of rock-paper-scissors). In this case, it looks like there’s no way to pick a winner.
 
@@ -80,65 +82,54 @@ Next up is Bob’s 5-4 victory over Charlie. But notice: if we were to add an ar
 
 This step-by-step process is shown below, with the final graph at right.
 
-Nine ballots, with ranked preferences
+![Nine ballots, with ranked preferences](https://github.com/Nimikro/cs50-3-tideman/blob/main/images/lockin.png)
 
 Based on the resulting graph, Charlie is the source (there’s no arrow pointing towards Charlie), so Charlie is declared the winner of this election.
 
 Put more formally, the Tideman voting method consists of three parts:
 
-Tally: Once all of the voters have indicated all of their preferences, determine, for each pair of candidates, who the preferred candidate is and by what margin they are preferred.
-Sort: Sort the pairs of candidates in decreasing order of strength of victory, where strength of victory is defined to be the number of voters who prefer the preferred candidate.
-Lock: Starting with the strongest pair, go through the pairs of candidates in order and “lock in” each pair to the candidate graph, so long as locking in that pair does not create a cycle in the graph.
+* Tally: Once all of the voters have indicated all of their preferences, determine, for each pair of candidates, who the preferred candidate is and by what margin they are preferred.
+* Sort: Sort the pairs of candidates in decreasing order of strength of victory, where strength of victory is defined to be the number of voters who prefer the preferred candidate.
+* Lock: Starting with the strongest pair, go through the pairs of candidates in order and “lock in” each pair to the candidate graph, so long as locking in that pair does not create a cycle in the graph.
+
 Once the graph is complete, the source of the graph (the one with no edges pointing towards it) is the winner!
 
-Getting Started
-Here’s how to download this problem’s “distribution code” (i.e., starter code) into your own CS50 IDE. Log into CS50 IDE and then, in a terminal window, execute each of the below.
+# Understanding
+Open up `tideman.c`.
 
-Navigate to your pset3 directory that should already exist.
-Execute mkdir tideman to make (i.e., create) a directory called tideman in your pset3 directory.
-Execute cd tideman to change into (i.e., open) that directory.
-Execute wget https://cdn.cs50.net/2020/fall/psets/3/tideman/tideman.c to download this problem’s distribution code.
-Execute ls. You should see this problem’s distribution code, in a file called tideman.c.
-Understanding
-Let’s open up tideman.c to take a look at what’s already there.
+First, notice the two-dimensional array `preferences`. The integer `preferences[i][j]` will represent the number of voters who prefer candidate `i` over candidate `j`.
 
-First, notice the two-dimensional array preferences. The integer preferences[i][j] will represent the number of voters who prefer candidate i over candidate j.
+The file also defines another two-dimensional array, called `locked`, which will represent the candidate graph. `locked` is a boolean array, so `locked[i][j]` being `true` represents the existence of an edge pointing from candidate `i` to candidate `j`; `false` means there is no edge. (If curious, this representation of a graph is known as an “adjacency matrix”).
 
-The file also defines another two-dimensional array, called locked, which will represent the candidate graph. locked is a boolean array, so locked[i][j] being true represents the existence of an edge pointing from candidate i to candidate j; false means there is no edge. (If curious, this representation of a graph is known as an “adjacency matrix”).
+Next up is a `struct` called `pair`, used to represent a pair of candidates: each pair includes the `winner`’s candidate index and the `loser`’s candidate index.
 
-Next up is a struct called pair, used to represent a pair of candidates: each pair includes the winner’s candidate index and the loser’s candidate index.
+The candidates themselves are stored in the array `candidates`, which is an array of `string`s representing the names of each of the candidates. There’s also an array of `pairs`, which will represent all of the pairs of candidates (for which one is preferred over the other) in the election.
 
-The candidates themselves are stored in the array candidates, which is an array of strings representing the names of each of the candidates. There’s also an array of pairs, which will represent all of the pairs of candidates (for which one is preferred over the other) in the election.
+The program also has two global variables: `pair_count` and `candidate_count`, representing the number of pairs and number of candidates in the arrays `pairs` and `candidates`, respectively.
 
-The program also has two global variables: pair_count and candidate_count, representing the number of pairs and number of candidates in the arrays pairs and candidates, respectively.
+Now onto `main`. Notice that after determining the number of candidates, the program loops through the `locked` graph and initially sets all of the values to `false`, which means our initial graph will have no edges in it.
 
-Now onto main. Notice that after determining the number of candidates, the program loops through the locked graph and initially sets all of the values to false, which means our initial graph will have no edges in it.
+Next, the program loops over all of the voters and collects their preferences in an array called `ranks` (via a call to `vote`), where `ranks[i]` is the index of the candidate who is the `i`th preference for the voter. These ranks are passed into the `record_preference` function, whose job it is to take those ranks and update the global `preferences` variable.
 
-Next, the program loops over all of the voters and collects their preferences in an array called ranks (via a call to vote), where ranks[i] is the index of the candidate who is the ith preference for the voter. These ranks are passed into the record_preference function, whose job it is to take those ranks and update the global preferences variable.
+Once all of the votes are in, the pairs of candidates are added to the `pairs` array via a called to `add_pairs`, sorted via a call to `sort_pairs`, and locked into the graph via a call to `lock_pairs`. Finally, `print_winner` is called to print out the name of the election’s winner!
 
-Once all of the votes are in, the pairs of candidates are added to the pairs array via a called to add_pairs, sorted via a call to sort_pairs, and locked into the graph via a call to lock_pairs. Finally, print_winner is called to print out the name of the election’s winner!
+# Specification
+Completed the implementation of tideman.c in such a way that it simulates a Tideman election.
 
-Further down in the file, you’ll see that the functions vote, record_preference, add_pairs,sort_pairs, lock_pairs, and print_winner are left blank. That’s up to you!
-
-Specification
-Complete the implementation of tideman.c in such a way that it simulates a Tideman election.
-
-Complete the vote function.
-The function takes arguments rank, name, and ranks. If name is a match for the name of a valid candidate, then you should update the ranks array to indicate that the voter has the candidate as their rank preference (where 0 is the first preference, 1 is the second preference, etc.)
-Recall that ranks[i] here represents the user’s ith preference.
-The function should return true if the rank was successfully recorded, and false otherwise (if, for instance, name is not the name of one of the candidates).
-You may assume that no two candidates will have the same name.
-Complete the record_preferences function.
-The function is called once for each voter, and takes as argument the ranks array, (recall that ranks[i] is the voter’s ith preference, where ranks[0] is the first preference).
-The function should update the global preferences array to add the current voter’s preferences. Recall that preferences[i][j] should represent the number of voters who prefer candidate i over candidate j.
-You may assume that every voter will rank each of the candidates.
-Complete the add_pairs function.
-The function should add all pairs of candidates where one candidate is preferred to the pairs array. A pair of candidates who are tied (one is not preferred over the other) should not be added to the array.
-The function should update the global variable pair_count to be the number of pairs of candidates. (The pairs should thus all be stored between pairs[0] and pairs[pair_count - 1], inclusive).
-Complete the sort_pairs function.
-The function should sort the pairs array in decreasing order of strength of victory, where strength of victory is defined to be the number of voters who prefer the preferred candidate. If multiple pairs have the same strength of victory, you may assume that the order does not matter.
-Complete the lock_pairs function.
-The function should create the locked graph, adding all edges in decreasing order of victory strength so long as the edge would not create a cycle.
-Complete the print_winner function.
-The function should print out the name of the candidate who is the source of the graph. You may assume there will not be more than one source.
-You should not modify anything else in tideman.c other than the implementations of the vote, record_preferences, add_pairs, sort_pairs, lock_pairs, and print_winner functions (and the inclusion of additional header files, if you’d like). You are permitted to add additional functions to tideman.c, so long as you do not change the declarations of any of the existing functions.
+* Completed the `vote` function.
+  * The function takes arguments `rank`, `name`, and `ranks`. If `name` is a match for the name of a valid candidate, then it updates the `ranks` array to indicate that the voter has the candidate as their `rank` preference (where `0` is the first preference, `1` is the second preference, etc.)
+  * The function returns `true` if the rank was successfully recorded, and `false` otherwise (if, for instance, `name` is not the name of one of the candidates).
+  * We assume that no two candidates will have the same name.
+* Completed the `record_preferences` function.
+  * The function is called once for each voter, and takes as argument the `ranks` array.
+  * The function updates the global `preferences` array to add the current voter’s preferences. `preferences[i][j]` represents the number of voters who prefer candidate `i` over candidate `j`.
+  * We assume that every voter will rank each of the candidates.
+* Completed the `add_pairs` function.
+  * The function adds all pairs of candidates where one candidate is preferred to the `pairs` array. A pair of candidates who are tied (one is not preferred over the other) is not added to the array.
+  * The function updates the global variable `pair_count` to be the number of pairs of candidates. (The pairs are thus stored between `pairs[0]` and `pairs[pair_count - 1]`, inclusive).
+* Completed the `sort_pairs` function.
+  * The function sorts the `pairs` array in decreasing order of strength of victory, where strength of victory is defined to be the number of voters who prefer the preferred candidate. If multiple pairs have the same strength of victory, we assume that the order does not matter.
+* Completed the `lock_pairs` function.
+  * The function creates the `locked` graph, adding all edges in decreasing order of victory strength so long as the edge would not create a cycle.
+* Completed the print_winner function.
+  * The function prints out the name of the candidate who is the source of the graph. We assume there will not be more than one source.
